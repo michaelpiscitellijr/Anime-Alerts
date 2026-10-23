@@ -1,0 +1,29 @@
+name: AniList episodes
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run script
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          ANILIST_USERNAME: ${{ secrets.ANILIST_USERNAME }}
+        run: python post_episodes.py
+      - name: Save posted episodes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add posted.json
+          git diff --staged --quiet || (git commit -m "Update posted episodes" && git push)
